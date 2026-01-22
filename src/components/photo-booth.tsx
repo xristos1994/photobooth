@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Camera, Loader2, Download, QrCode, Settings, Info, History } from 'lucide-react';
+import { Camera, Loader2, Download, QrCode, Settings, Info, History  } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import QRCode from 'qrcode';
@@ -16,6 +16,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { Label } from '@/components/ui/label';
 
 const PHOTO_OPTIONS = [1, 2, 3];
 const COUNTDOWN_FIRST = 5;
@@ -25,6 +26,7 @@ const BORDER_SIZE = 10; // The size of the white border in pixels for the final 
 const PREVIEW_BORDER_SIZE = 2; // The size of the white border in pixels for the preview
 const FOOTER_HEIGHT = 120; // Height for the text footer on the final image
 const HISTORY_URL = "https://drive.google.com/drive/folders/1U1mPoev7lGEJTlB0T2evFdMcNQPDTOrR?usp=sharing";
+
 
 export function PhotoBooth() {
     const [numPhotos, setNumPhotos] = useState(3);
@@ -69,7 +71,7 @@ export function PhotoBooth() {
 
     useEffect(() => {
         startWebcam();
-        
+
         const generateHistoryQr = async () => {
             try {
                 const qr = await QRCode.toDataURL(HISTORY_URL, { errorCorrectionLevel: 'H' });
@@ -79,7 +81,7 @@ export function PhotoBooth() {
             }
         };
         generateHistoryQr();
-
+        
         return () => {
             if (videoRef.current && videoRef.current.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
@@ -103,17 +105,23 @@ export function PhotoBooth() {
                 let sourceWidth = videoWidth;
                 let sourceHeight = videoHeight;
 
-                if (videoWidth / videoHeight > targetAspectRatio) {
-                    sourceWidth = videoHeight * targetAspectRatio;
-                    sourceX = (videoWidth - sourceWidth) / 2;
-                } else {
+                // The video stream is portrait (e.g. 480x640)
+                if (videoWidth < videoHeight) {
                     sourceHeight = videoWidth / targetAspectRatio;
                     sourceY = (videoHeight - sourceHeight) / 2;
+                } else { // The video stream is landscape (e.g. 640x480 or wider)
+                    sourceWidth = videoHeight * targetAspectRatio;
+                    sourceX = (videoWidth - sourceWidth) / 2;
                 }
 
                 canvas.width = sourceWidth;
                 canvas.height = sourceHeight;
-                
+
+                context.save();
+                context.translate(canvas.width, 0);
+                context.scale(-1, 1);
+
+                // Draw the cropped video frame onto the canvas
                 context.drawImage(
                     video,
                     sourceX,
@@ -174,6 +182,7 @@ export function PhotoBooth() {
                 title: "Upload Failed",
                 description: `Could not upload image to Google Drive. Downloading to device instead.`,
             });
+            // Fallback to direct download if upload fails
             downloadImage(dataUrl, `PicClick-booth-${new Date().toISOString()}.jpg`);
         }
 
@@ -309,33 +318,37 @@ export function PhotoBooth() {
         const screenWidth = document.documentElement.clientWidth;
         const screenHeight = document.documentElement.clientHeight;
 
-        const rightColumnWidth = Math.min(screenWidth * 0.2, 400);
-
-        const availableWidthForVideo = screenWidth - rightColumnWidth - 24; // 24 for gaps
-        const availableHeightForVideo = screenHeight - 100; // 100 for footer
+        const availableWidthForVideo = screenWidth * 0.7;
+        const availableHeightForVideo = screenHeight - 150;
 
         let videoWidth = availableWidthForVideo;
         let videoHeight = availableWidthForVideo * 3 / 4;
-        if (videoHeight > availableHeightForVideo) {
+
+        if (availableWidthForVideo / availableHeightForVideo > 4 / 3) {
             videoHeight = availableHeightForVideo;
             videoWidth = availableHeightForVideo * 4 / 3;
         }
 
+        const availableWidthForPreviewPhoto = screenWidth * 0.3 - 8;
 
-        const availableHeightForPreviewPhoto = (screenHeight - 16 - (numPhotos -1) * 4) / numPhotos;
-        let previewPhotoHeight = availableHeightForPreviewPhoto;
-        let previewPhotoWidth = availableHeightForPreviewPhoto * 4 / 3;
+        const availableHeightForPreviewPhoto = (screenHeight / numPhotos) - ((numPhotos + 1) * 4);
 
+        let previewPhotoWidth = availableWidthForPreviewPhoto;
+        let previewPhotoHeight = availableWidthForPreviewPhoto * 3 / 4;
+
+        if (availableWidthForPreviewPhoto / availableHeightForPreviewPhoto > 4 / 3) {
+            previewPhotoHeight = availableHeightForPreviewPhoto;
+            previewPhotoWidth = availableHeightForPreviewPhoto * 4 / 3;
+        }
 
         const style = {
             pageContainer: {
                 display: 'flex',
                 gap: '8px',
-                height: '100%',
-                padding: '8px'
+                height: '100%'
             },
             leftColumn: {
-                flex: 1,
+                width: '70%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -343,7 +356,7 @@ export function PhotoBooth() {
                 gap: '8px'
             },
             rightColumn: {
-                width: `${rightColumnWidth}px`,
+                width: 'calc(30% - 8px)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -355,10 +368,7 @@ export function PhotoBooth() {
                 height: `${videoHeight}px`,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-                borderRadius: 'var(--radius)',
+                justifyContent: 'center'
             },
             video: {
                 width: `${videoWidth}px`,
@@ -366,40 +376,30 @@ export function PhotoBooth() {
                 objectFit: 'cover',
                 transform: 'scaleX(-1)'
             },
-            previewPhotoContainer: {
-                width: `100%`,
-                height: `${previewPhotoHeight}px`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-            },
             previewPhoto: {
                 width: `${previewPhotoWidth}px`,
                 height: `${previewPhotoHeight}px`,
                 objectFit: 'contain',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
             }
         };
 
         setStyle(style)
-    }, [numPhotos, capturedImages.length]);
-
-
-
-
-
-
+    }, []);
 
     return (
-        <div style={style.pageContainer}>
+        <div className="pageContainer" style={style.pageContainer}>
             {/* Left Column */}
-            <div style={style.leftColumn}>
-                <div style={style.videoContainer}>
+            <div className="leftColumn" style={style.leftColumn}>
+                <div className="videoContainer" style={style.videoContainer}>
                     <video ref={videoRef} autoPlay muted playsInline style={style.video}></video>
                     {isFlashing && (
                         <div className="absolute inset-0 bg-white/80" style={{ animation: 'ping 200ms cubic-bezier(0, 0, 0.2, 1) forwards' }}></div>
                     )}
                     {countdown !== null && (
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300">
+                        <div className="absolute top-4 left-4 transition-opacity duration-300">
                             <span className="text-white text-9xl font-bold font-headline" style={{ textShadow: '0 0 10px rgba(0,0,0,0.7)' }}>{countdown}</span>
                         </div>
                     )}
@@ -412,7 +412,7 @@ export function PhotoBooth() {
                     )}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 items-center w-full">
-                    <div className="flex-shrink-0 flex gap-2">
+                    <div className="flex-shrink-0">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="lg" className="w-full sm:w-auto" disabled={isCapturing}>
@@ -454,21 +454,17 @@ export function PhotoBooth() {
             </div>
 
             {/* Right Column */}
-            <div style={style.rightColumn}>
+            <div className="rightColumn" style={style.rightColumn}>
                 {Array.from({ length: numPhotos }).map((_, index) => {
                     const imageSrc = capturedImages[index];
                     return (
-                        <div key={index} style={style.previewPhotoContainer} className="bg-muted/40 rounded-md overflow-hidden">
-                        {
-                            imageSrc ? (
-                                <img src={imageSrc} alt={`Captured photo ${index + 1}`} style={style.previewPhoto} />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <Camera className="w-16 h-16 text-muted-foreground/50" />
-                                </div>
-                            )
-                        }
-                        </div>
+                        imageSrc ? (
+                            <img src={imageSrc} alt={`Captured photo ${index + 1}`} className="previewPhoto" style={style.previewPhoto} />
+                        ) : (
+                            <div className="previewPhoto" style={style.previewPhoto}>
+                                <Camera className="w-16 h-16 text-muted-foreground/50" />
+                            </div>
+                        )
                     )
                 })}
             </div>
@@ -476,18 +472,18 @@ export function PhotoBooth() {
             <canvas ref={canvasRef} className="hidden"></canvas>
 
             <Dialog open={showModal} onOpenChange={closeModal}>
-                <DialogContent className="max-w-[90vw] max-h-[90vh] w-auto h-auto flex flex-col">
+                <DialogContent style={{ width: "70vw", maxWidth: '70vw' }}>
                     <DialogHeader>
                         <DialogTitle className="font-headline text-2xl">Your Photo Is Ready!</DialogTitle>
                     </DialogHeader>
-                    <div className="flex-grow flex gap-4 items-center justify-center overflow-hidden">
-                        <div className="flex-shrink h-full flex items-center justify-center">
-                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg object-contain h-full w-auto"/>}
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-around' }}>
+                        <div style={{ maxWidth: '50%' }}>
+                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ maxHeight: '80vh' }}/>}
                         </div>
-                        <div className="space-y-4 text-center flex flex-col items-center justify-center flex-shrink-0">
+                        <div className="space-y-4 text-center flex flex-col items-center justify-center" style={{ maxWidth: '50%' }}>
                             <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Scan to Download</h3>
                             <div className="bg-white p-2 rounded-lg shadow-md inline-block">
-                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" className="max-h-[30vh]"/> : <Loader2 className="animate-spin" />}
+                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" style={{ maxHeight: '30vh' }}/> : <Loader2 className="animate-spin" />}
                             </div>
                             <p className="text-sm text-muted-foreground">Scan this QR code with your phone or another device to download the image.</p>
                             <Button onClick={() => downloadImage(finalImage!, `PicClick-booth-${new Date().toISOString()}.jpg`)} className="w-full mt-4">
