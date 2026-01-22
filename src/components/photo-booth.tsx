@@ -358,6 +358,7 @@ export function PhotoBooth() {
             video: {
                 width: `${videoWidth}px`,
                 height: `${videoHeight}px`,
+                objectFit: 'cover'
             },
             previewPhoto: {
                 width: `${previewPhotoWidth}px`,
