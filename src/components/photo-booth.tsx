@@ -295,8 +295,16 @@ export function PhotoBooth() {
     const [style, setStyle] = useState({});
 
     useEffect(() => {
-        const availableWidthForVideo = document.documentElement.clientWidth * 0.7;
-        const availableHeightForVideo = document.documentElement.clientHeight - 150;
+        alert('width: ' + document.documentElement.clientWidth);
+        alert('height: ' + document.documentElement.clientHeight)
+    }, []);
+
+    useEffect(() => {
+        const screenWidth = document.documentElement.clientWidth;
+        const screenHeight = document.documentElement.clientHeight;
+
+        const availableWidthForVideo = screenWidth * 0.7;
+        const availableHeightForVideo = screenHeight - 150;
 
         let videoWidth = availableWidthForVideo;
         let videoHeight = availableWidthForVideo * 3 / 4;
@@ -306,9 +314,9 @@ export function PhotoBooth() {
             videoWidth = availableHeightForVideo * 4 / 3;
         }
 
-        const availableWidthForPreviewPhoto = document.documentElement.clientWidth * 0.3 - 8;
+        const availableWidthForPreviewPhoto = screenWidth * 0.3 - 8;
 
-        const availableHeightForPreviewPhoto = (document.documentElement.clientHeight / numPhotos) - ((numPhotos + 1) * 4);
+        const availableHeightForPreviewPhoto = (screenHeight / numPhotos) - ((numPhotos + 1) * 4);
 
         let previewPhotoWidth = availableWidthForPreviewPhoto;
         let previewPhotoHeight = availableWidthForPreviewPhoto * 3 / 4;
