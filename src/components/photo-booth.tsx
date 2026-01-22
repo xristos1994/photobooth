@@ -295,11 +295,6 @@ export function PhotoBooth() {
     const [style, setStyle] = useState({});
 
     useEffect(() => {
-        alert('width: ' + document.documentElement.clientWidth);
-        alert('height: ' + document.documentElement.clientHeight)
-    }, []);
-
-    useEffect(() => {
         const screenWidth = document.documentElement.clientWidth;
         const screenHeight = document.documentElement.clientHeight;
 
@@ -455,13 +450,13 @@ export function PhotoBooth() {
             <canvas ref={canvasRef} className="hidden"></canvas>
 
             <Dialog open={showModal} onOpenChange={closeModal}>
-                <DialogContent className="sm:max-w-4xl max-h-[95vh] max-w-[95vw] flex flex-col">
+                <DialogContent style={{width: "70vw", maxWidth: '70vw'}}>
                     <DialogHeader>
                         <DialogTitle className="font-headline text-2xl">Your Photo Is Ready!</DialogTitle>
                     </DialogHeader>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center flex-1 min-h-0">
-                        <div className="flex flex-col items-center justify-center h-full min-h-0">
-                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg max-w-full max-h-full object-contain" />}
+                    <div style={{display: 'flex', gap: '12px', justifyContent: 'space-around'}}>
+                        <div>
+                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{height: '80vh', width: 'auto', maxWidth: 'unset'}}/>}
                         </div>
                         <div className="space-y-4 text-center flex flex-col items-center justify-center">
                             <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Scan to Download</h3>
