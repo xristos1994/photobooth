@@ -26,19 +26,6 @@ const BORDER_SIZE = 10; // The size of the white border in pixels for the final 
 const PREVIEW_BORDER_SIZE = 2; // The size of the white border in pixels for the preview
 const FOOTER_HEIGHT = 120; // Height for the text footer on the final image
 
-const availableWidthForVideo = window.innerWidth * 0.7;
-const availableHeightForVideo = window.innerHeight - 150;
-
-let videoWidth = availableWidthForVideo;
-let videoHeight = availableWidthForVideo * 3 / 4;
-
-if (availableWidthForVideo / availableHeightForVideo > 4 / 3) {
-    videoHeight = availableHeightForVideo;
-    videoWidth = availableHeightForVideo * 4 / 3;
-}
-
-const availableWidthForPreviewPhoto = window.innerWidth * 0.3 - 8;
-
 export function PhotoBooth() {
     const [numPhotos, setNumPhotos] = useState(3);
     const [isCapturing, setIsCapturing] = useState(false);
@@ -305,63 +292,86 @@ export function PhotoBooth() {
         setCapturedImages([]);
     };
 
-    const availableHeightForPreviewPhoto = (window.innerHeight / numPhotos) - ((numPhotos + 1) * 4);
+    const [style, setStyle] = useState({});
 
-    let previewPhotoWidth = availableWidthForPreviewPhoto;
-    let previewPhotoHeight = availableWidthForPreviewPhoto * 3 / 4;
+    useEffect(() => {
+        const availableWidthForVideo = window.innerWidth * 0.7;
+        const availableHeightForVideo = window.innerHeight - 150;
 
-    if (availableWidthForPreviewPhoto / availableHeightForPreviewPhoto > 4 / 3) {
-        previewPhotoHeight = availableHeightForPreviewPhoto;
-        previewPhotoWidth = availableHeightForPreviewPhoto * 4 / 3;
-    }
+        let videoWidth = availableWidthForVideo;
+        let videoHeight = availableWidthForVideo * 3 / 4;
 
-    const style = {
-        pageContainer: {
-            display: 'flex',
-            gap: '8px',
-            height: '100%'
-        },
-        leftColumn: {
-            width: '70%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            gap: '8px'
-        },
-        rightColumn: {
-            width: 'calc(30% - 8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '4px',
-            flexDirection: 'column'
-        },
-        videoContainer: {
-            width: `${videoWidth}px`,
-            height: `${videoHeight}px`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-        },
-        previewPhoto: {
-            width: `${previewPhotoWidth}px`,
-            height: `${previewPhotoHeight}px`,
-            objectFit: 'contain',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-
+        if (availableWidthForVideo / availableHeightForVideo > 4 / 3) {
+            videoHeight = availableHeightForVideo;
+            videoWidth = availableHeightForVideo * 4 / 3;
         }
-    };
+
+        const availableWidthForPreviewPhoto = window.innerWidth * 0.3 - 8;
+
+        const availableHeightForPreviewPhoto = (window.innerHeight / numPhotos) - ((numPhotos + 1) * 4);
+
+        let previewPhotoWidth = availableWidthForPreviewPhoto;
+        let previewPhotoHeight = availableWidthForPreviewPhoto * 3 / 4;
+
+        if (availableWidthForPreviewPhoto / availableHeightForPreviewPhoto > 4 / 3) {
+            previewPhotoHeight = availableHeightForPreviewPhoto;
+            previewPhotoWidth = availableHeightForPreviewPhoto * 4 / 3;
+        }
+
+        const style = {
+            pageContainer: {
+                display: 'flex',
+                gap: '8px',
+                height: '100%'
+            },
+            leftColumn: {
+                width: '70%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                gap: '8px'
+            },
+            rightColumn: {
+                width: 'calc(30% - 8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                flexDirection: 'column'
+            },
+            videoContainer: {
+                width: `${videoWidth}px`,
+                height: `${videoHeight}px`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            },
+            previewPhoto: {
+                width: `${previewPhotoWidth}px`,
+                height: `${previewPhotoHeight}px`,
+                objectFit: 'contain',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+
+            }
+        };
+
+        setStyle(style)
+    }, []);
+
+
+
+
 
 
 
     return (
-        <div className="pageContainer" style={{ ...style.pageContainer }}>
+        <div className="pageContainer" style={style.pageContainer}>
             {/* Left Column */}
-            <div className="leftColumn" style={{ ...style.leftColumn }}>
-                <div className="videoContainer" style={{ ...style.videoContainer }}>
+            <div className="leftColumn" style={style.leftColumn}>
+                <div className="videoContainer" style={style.videoContainer}>
                     <video ref={videoRef} autoPlay muted playsInline></video>
                     {isFlashing && (
                         <div className="absolute inset-0 bg-white/80" style={{ animation: 'ping 200ms cubic-bezier(0, 0, 0.2, 1) forwards' }}></div>
@@ -414,14 +424,14 @@ export function PhotoBooth() {
             </div>
 
             {/* Right Column */}
-            <div className="rightColumn" style={{ ...style.rightColumn }}>
+            <div className="rightColumn" style={style.rightColumn}>
                 {Array.from({ length: numPhotos }).map((_, index) => {
                     const imageSrc = capturedImages[index];
                     return (
                         imageSrc ? (
-                            <img src={imageSrc} alt={`Captured photo ${index + 1}`} className="previewPhoto" style={{...style.previewPhoto}} />
+                            <img src={imageSrc} alt={`Captured photo ${index + 1}`} className="previewPhoto" style={style.previewPhoto} />
                         ) : (
-                            <div className="previewPhoto" style={{...style.previewPhoto}}>
+                            <div className="previewPhoto" style={style.previewPhoto}>
                                 <Camera className="w-16 h-16 text-muted-foreground/50" />
                             </div>
                         )
