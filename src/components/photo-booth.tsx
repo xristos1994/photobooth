@@ -101,6 +101,10 @@ export function PhotoBooth() {
                 canvas.width = sourceWidth;
                 canvas.height = sourceHeight;
 
+                context.save();
+                context.translate(canvas.width, 0);
+                context.scale(-1, 1);
+
                 // Draw the cropped video frame onto the canvas
                 context.drawImage(
                     video,
@@ -353,7 +357,8 @@ export function PhotoBooth() {
             video: {
                 width: `${videoWidth}px`,
                 height: `${videoHeight}px`,
-                objectFit: 'cover'
+                objectFit: 'cover',
+                transform: 'scaleX(-1)'
             },
             previewPhoto: {
                 width: `${previewPhotoWidth}px`,
@@ -362,6 +367,7 @@ export function PhotoBooth() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                transform: 'scaleX(-1)'
 
             }
         };
@@ -450,13 +456,13 @@ export function PhotoBooth() {
             <canvas ref={canvasRef} className="hidden"></canvas>
 
             <Dialog open={showModal} onOpenChange={closeModal}>
-                <DialogContent style={{width: "70vw", maxWidth: '70vw'}}>
+                <DialogContent style={{ width: "70vw", maxWidth: '70vw' }}>
                     <DialogHeader>
                         <DialogTitle className="font-headline text-2xl">Your Photo Is Ready!</DialogTitle>
                     </DialogHeader>
-                    <div style={{display: 'flex', gap: '12px', justifyContent: 'space-around'}}>
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-around' }}>
                         <div>
-                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{height: '80vh', width: 'auto', maxWidth: 'unset'}}/>}
+                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ height: '80vh', width: 'auto', maxWidth: 'unset' }} />}
                         </div>
                         <div className="space-y-4 text-center flex flex-col items-center justify-center">
                             <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Scan to Download</h3>
