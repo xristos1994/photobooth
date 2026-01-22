@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Camera, Loader2, Download, QrCode, Settings } from 'lucide-react';
+import { Camera, Loader2, Download, QrCode, Settings, Info, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import QRCode from 'qrcode';
@@ -16,7 +16,6 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { Label } from '@/components/ui/label';
 
 const PHOTO_OPTIONS = [1, 2, 3];
 const COUNTDOWN_FIRST = 5;
@@ -25,6 +24,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtJfAc31SfatpMtQzy
 const BORDER_SIZE = 10; // The size of the white border in pixels for the final image
 const PREVIEW_BORDER_SIZE = 2; // The size of the white border in pixels for the preview
 const FOOTER_HEIGHT = 120; // Height for the text footer on the final image
+const HISTORY_URL = "https://drive.google.com/drive/folders/1U1mPoev7lGEJTlB0T2evFdMcNQPDTOrR?usp=sharing";
 
 export function PhotoBooth() {
     const [numPhotos, setNumPhotos] = useState(3);
@@ -35,8 +35,11 @@ export function PhotoBooth() {
     const [webcamError, setWebcamError] = useState<string | null>(null);
     const [finalImage, setFinalImage] = useState<string | null>(null);
     const [qrCodeUrl, setQrCodeUrl] = useState('');
+    const [historyQrCodeUrl, setHistoryQrCodeUrl] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [isFlashing, setIsFlashing] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -66,6 +69,17 @@ export function PhotoBooth() {
 
     useEffect(() => {
         startWebcam();
+        
+        const generateHistoryQr = async () => {
+            try {
+                const qr = await QRCode.toDataURL(HISTORY_URL, { errorCorrectionLevel: 'H' });
+                setHistoryQrCodeUrl(qr);
+            } catch (err) {
+                console.error('Failed to generate history QR code', err);
+            }
+        };
+        generateHistoryQr();
+
         return () => {
             if (videoRef.current && videoRef.current.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
@@ -89,23 +103,17 @@ export function PhotoBooth() {
                 let sourceWidth = videoWidth;
                 let sourceHeight = videoHeight;
 
-                // The video stream is portrait (e.g. 480x640)
-                if (videoWidth < videoHeight) {
-                    sourceHeight = videoWidth / targetAspectRatio;
-                    sourceY = (videoHeight - sourceHeight) / 2;
-                } else { // The video stream is landscape (e.g. 640x480 or wider)
+                if (videoWidth / videoHeight > targetAspectRatio) {
                     sourceWidth = videoHeight * targetAspectRatio;
                     sourceX = (videoWidth - sourceWidth) / 2;
+                } else {
+                    sourceHeight = videoWidth / targetAspectRatio;
+                    sourceY = (videoHeight - sourceHeight) / 2;
                 }
 
                 canvas.width = sourceWidth;
                 canvas.height = sourceHeight;
-
-                context.save();
-                context.translate(canvas.width, 0);
-                context.scale(-1, 1);
-
-                // Draw the cropped video frame onto the canvas
+                
                 context.drawImage(
                     video,
                     sourceX,
@@ -166,7 +174,6 @@ export function PhotoBooth() {
                 title: "Upload Failed",
                 description: `Could not upload image to Google Drive. Downloading to device instead.`,
             });
-            // Fallback to direct download if upload fails
             downloadImage(dataUrl, `PicClick-booth-${new Date().toISOString()}.jpg`);
         }
 
@@ -302,37 +309,33 @@ export function PhotoBooth() {
         const screenWidth = document.documentElement.clientWidth;
         const screenHeight = document.documentElement.clientHeight;
 
-        const availableWidthForVideo = screenWidth * 0.7;
-        const availableHeightForVideo = screenHeight - 150;
+        const rightColumnWidth = Math.min(screenWidth * 0.2, 400);
+
+        const availableWidthForVideo = screenWidth - rightColumnWidth - 24; // 24 for gaps
+        const availableHeightForVideo = screenHeight - 100; // 100 for footer
 
         let videoWidth = availableWidthForVideo;
         let videoHeight = availableWidthForVideo * 3 / 4;
-
-        if (availableWidthForVideo / availableHeightForVideo > 4 / 3) {
+        if (videoHeight > availableHeightForVideo) {
             videoHeight = availableHeightForVideo;
             videoWidth = availableHeightForVideo * 4 / 3;
         }
 
-        const availableWidthForPreviewPhoto = screenWidth * 0.3 - 8;
 
-        const availableHeightForPreviewPhoto = (screenHeight / numPhotos) - ((numPhotos + 1) * 4);
+        const availableHeightForPreviewPhoto = (screenHeight - 16 - (numPhotos -1) * 4) / numPhotos;
+        let previewPhotoHeight = availableHeightForPreviewPhoto;
+        let previewPhotoWidth = availableHeightForPreviewPhoto * 4 / 3;
 
-        let previewPhotoWidth = availableWidthForPreviewPhoto;
-        let previewPhotoHeight = availableWidthForPreviewPhoto * 3 / 4;
-
-        if (availableWidthForPreviewPhoto / availableHeightForPreviewPhoto > 4 / 3) {
-            previewPhotoHeight = availableHeightForPreviewPhoto;
-            previewPhotoWidth = availableHeightForPreviewPhoto * 4 / 3;
-        }
 
         const style = {
             pageContainer: {
                 display: 'flex',
                 gap: '8px',
-                height: '100%'
+                height: '100%',
+                padding: '8px'
             },
             leftColumn: {
-                width: '70%',
+                flex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -340,7 +343,7 @@ export function PhotoBooth() {
                 gap: '8px'
             },
             rightColumn: {
-                width: 'calc(30% - 8px)',
+                width: `${rightColumnWidth}px`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -352,7 +355,10 @@ export function PhotoBooth() {
                 height: `${videoHeight}px`,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: 'var(--radius)',
             },
             video: {
                 width: `${videoWidth}px`,
@@ -360,18 +366,22 @@ export function PhotoBooth() {
                 objectFit: 'cover',
                 transform: 'scaleX(-1)'
             },
+            previewPhotoContainer: {
+                width: `100%`,
+                height: `${previewPhotoHeight}px`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            },
             previewPhoto: {
                 width: `${previewPhotoWidth}px`,
                 height: `${previewPhotoHeight}px`,
                 objectFit: 'contain',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
             }
         };
 
         setStyle(style)
-    }, []);
+    }, [numPhotos, capturedImages.length]);
 
 
 
@@ -380,16 +390,16 @@ export function PhotoBooth() {
 
 
     return (
-        <div className="pageContainer" style={style.pageContainer}>
+        <div style={style.pageContainer}>
             {/* Left Column */}
-            <div className="leftColumn" style={style.leftColumn}>
-                <div className="videoContainer" style={style.videoContainer}>
+            <div style={style.leftColumn}>
+                <div style={style.videoContainer}>
                     <video ref={videoRef} autoPlay muted playsInline style={style.video}></video>
                     {isFlashing && (
                         <div className="absolute inset-0 bg-white/80" style={{ animation: 'ping 200ms cubic-bezier(0, 0, 0.2, 1) forwards' }}></div>
                     )}
                     {countdown !== null && (
-                        <div className="absolute top-4 left-4 transition-opacity duration-300">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300">
                             <span className="text-white text-9xl font-bold font-headline" style={{ textShadow: '0 0 10px rgba(0,0,0,0.7)' }}>{countdown}</span>
                         </div>
                     )}
@@ -402,7 +412,7 @@ export function PhotoBooth() {
                     )}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 items-center w-full">
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 flex gap-2">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="lg" className="w-full sm:w-auto" disabled={isCapturing}>
@@ -422,6 +432,14 @@ export function PhotoBooth() {
                                 </DropdownMenuRadioGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        <Button variant="outline" size="lg" className="px-3" onClick={() => setShowInfoModal(true)} disabled={isCapturing || isProcessing}>
+                           <Info className="h-5 w-5" />
+                           <span className="sr-only">Οδηγίες</span>
+                       </Button>
+                       <Button variant="outline" size="lg" className="px-3" onClick={() => setShowHistoryModal(true)} disabled={isCapturing || isProcessing}>
+                           <History className="h-5 w-5" />
+                           <span className="sr-only">Ιστορικό</span>
+                       </Button>
                     </div>
                     <Button onClick={handleStartCapture} disabled={isCapturing || isProcessing || !!webcamError} size="lg" className="w-full font-headline text-lg py-7 rounded-xl shadow-md transition-all hover:scale-105 active:scale-100 flex-grow">
                         {isProcessing ? (
@@ -436,17 +454,21 @@ export function PhotoBooth() {
             </div>
 
             {/* Right Column */}
-            <div className="rightColumn" style={style.rightColumn}>
+            <div style={style.rightColumn}>
                 {Array.from({ length: numPhotos }).map((_, index) => {
                     const imageSrc = capturedImages[index];
                     return (
-                        imageSrc ? (
-                            <img src={imageSrc} alt={`Captured photo ${index + 1}`} className="previewPhoto" style={style.previewPhoto} />
-                        ) : (
-                            <div className="previewPhoto" style={style.previewPhoto}>
-                                <Camera className="w-16 h-16 text-muted-foreground/50" />
-                            </div>
-                        )
+                        <div key={index} style={style.previewPhotoContainer} className="bg-muted/40 rounded-md overflow-hidden">
+                        {
+                            imageSrc ? (
+                                <img src={imageSrc} alt={`Captured photo ${index + 1}`} style={style.previewPhoto} />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <Camera className="w-16 h-16 text-muted-foreground/50" />
+                                </div>
+                            )
+                        }
+                        </div>
                     )
                 })}
             </div>
@@ -454,18 +476,18 @@ export function PhotoBooth() {
             <canvas ref={canvasRef} className="hidden"></canvas>
 
             <Dialog open={showModal} onOpenChange={closeModal}>
-                <DialogContent style={{ width: "70vw", maxWidth: '70vw' }}>
+                <DialogContent className="max-w-[90vw] max-h-[90vh] w-auto h-auto flex flex-col">
                     <DialogHeader>
                         <DialogTitle className="font-headline text-2xl">Your Photo Is Ready!</DialogTitle>
                     </DialogHeader>
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-around' }}>
-                        <div style={{ maxWidth: '50%' }}>
-                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ maxHeight: '80vh' }}/>}
+                    <div className="flex-grow flex gap-4 items-center justify-center overflow-hidden">
+                        <div className="flex-shrink h-full flex items-center justify-center">
+                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg object-contain h-full w-auto"/>}
                         </div>
-                        <div className="space-y-4 text-center flex flex-col items-center justify-center" style={{ maxWidth: '50%' }}>
+                        <div className="space-y-4 text-center flex flex-col items-center justify-center flex-shrink-0">
                             <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Scan to Download</h3>
                             <div className="bg-white p-2 rounded-lg shadow-md inline-block">
-                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" style={{ maxHeight: '30vh' }}/> : <Loader2 className="animate-spin" />}
+                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" className="max-h-[30vh]"/> : <Loader2 className="animate-spin" />}
                             </div>
                             <p className="text-sm text-muted-foreground">Scan this QR code with your phone or another device to download the image.</p>
                             <Button onClick={() => downloadImage(finalImage!, `PicClick-booth-${new Date().toISOString()}.jpg`)} className="w-full mt-4">
@@ -473,6 +495,55 @@ export function PhotoBooth() {
                                 Download
                             </Button>
                         </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showInfoModal} onOpenChange={setShowInfoModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl">Οδηγίες Χρήσης</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 text-sm">
+                        <p>Καλώς ήρθατε στο <strong>PicClick Booth</strong>!</p>
+                        <ol className="list-decimal list-inside space-y-3">
+                            <li>
+                                <strong>Επιλογή Αριθμού Φωτογραφιών:</strong><br/>
+                                Χρησιμοποιήστε το κουμπί ρυθμίσεων (<Settings className="inline h-4 w-4" />) για να επιλέξετε πόσες φωτογραφίες θα τραβήξετε.
+                            </li>
+                            <li>
+                                <strong>Έναρξη:</strong><br/>
+                                Πατήστε το κουμπί "Start Photo Session" για να ξεκινήσει η αντίστροφη μέτρηση.
+                            </li>
+                            <li>
+                                <strong>Ποζάρετε!:</strong><br/>
+                                Ετοιμαστείτε να ποζάρετε! Η κάμερα θα τραβήξει αυτόματα τις φωτογραφίες μετά την αντίστροφη μέτρηση.
+                            </li>
+                            <li>
+                                <strong>Τελική Εικόνα:</strong><br/>
+                                Μόλις ολοκληρωθεί η λήψη, οι φωτογραφίες σας θα συνδυαστούν σε μία τελική εικόνα.
+                            </li>
+                            <li>
+                                <strong>Λήψη Φωτογραφίας:</strong><br/>
+                                Στο παράθυρο που θα εμφανιστεί, σαρώστε τον κωδικό QR με το κινητό σας για να κατεβάσετε τη φωτογραφία, ή χρησιμοποιήστε το κουμπί "Download".
+                            </li>
+                        </ol>
+                        <p className="text-center font-bold">Καλή διασκέδαση!</p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl">Ιστορικό Φωτογραφιών</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 text-center flex flex-col items-center justify-center">
+                        <h3 className="font-headline text-xl">Σαρώστε για να δείτε όλες τις φωτογραφίες</h3>
+                        <div className="bg-white p-2 rounded-lg shadow-md inline-block">
+                            {historyQrCodeUrl ? <img src={historyQrCodeUrl} alt="QR Code for photo history" className="max-w-xs" /> : <Loader2 className="animate-spin h-24 w-24" />}
+                        </div>
+                        <p className="text-sm text-muted-foreground">Σαρώστε αυτόν τον κωδικό QR με το κινητό σας για να δείτε ολόκληρη τη συλλογή φωτογραφιών.</p>
                     </div>
                 </DialogContent>
             </Dialog>
