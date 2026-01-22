@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Label } from '@/components/ui/label';
 
-const PHOTO_OPTIONS = [1, 2, 3, 4];
+const PHOTO_OPTIONS = [1, 2, 3];
 const COUNTDOWN_FIRST = 5;
 const COUNTDOWN_SUBSEQUENT = 3;
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtJfAc31SfatpMtQzyq-K2BVOE5-1RywzEsb6fSxaKvy_0_JNOat45IofTJ4HnEQXT/exec";
@@ -345,7 +345,7 @@ export function PhotoBooth() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '4px',
-                flexDirection: 'column'
+                flexDirection: 'column',
             },
             videoContainer: {
                 width: `${videoWidth}px`,
@@ -367,8 +367,6 @@ export function PhotoBooth() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transform: 'scaleX(-1)'
-
             }
         };
 
@@ -461,18 +459,18 @@ export function PhotoBooth() {
                         <DialogTitle className="font-headline text-2xl">Your Photo Is Ready!</DialogTitle>
                     </DialogHeader>
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-around' }}>
-                        <div>
-                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ height: '80vh', width: 'auto', maxWidth: 'unset' }} />}
+                        <div style={{ maxWidth: '50%' }}>
+                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ maxHeight: '80vh' }}/>}
                         </div>
-                        <div className="space-y-4 text-center flex flex-col items-center justify-center">
+                        <div className="space-y-4 text-center flex flex-col items-center justify-center" style={{ maxWidth: '50%' }}>
                             <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Scan to Download</h3>
                             <div className="bg-white p-2 rounded-lg shadow-md inline-block">
-                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" /> : <Loader2 className="animate-spin" />}
+                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" style={{ maxHeight: '30vh' }}/> : <Loader2 className="animate-spin" />}
                             </div>
                             <p className="text-sm text-muted-foreground">Scan this QR code with your phone or another device to download the image.</p>
                             <Button onClick={() => downloadImage(finalImage!, `PicClick-booth-${new Date().toISOString()}.jpg`)} className="w-full mt-4">
                                 <Download className="mr-2 h-4 w-4" />
-                                Download to This Device
+                                Download
                             </Button>
                         </div>
                     </div>
