@@ -355,6 +355,10 @@ export function PhotoBooth() {
                 alignItems: 'center',
                 justifyContent: 'center'
             },
+            video: {
+                width: `${videoWidth}px`,
+                height: `${videoHeight}px`,
+            },
             previewPhoto: {
                 width: `${previewPhotoWidth}px`,
                 height: `${previewPhotoHeight}px`,
@@ -380,7 +384,7 @@ export function PhotoBooth() {
             {/* Left Column */}
             <div className="leftColumn" style={style.leftColumn}>
                 <div className="videoContainer" style={style.videoContainer}>
-                    <video ref={videoRef} autoPlay muted playsInline></video>
+                    <video ref={videoRef} autoPlay muted playsInline style={style.video}></video>
                     {isFlashing && (
                         <div className="absolute inset-0 bg-white/80" style={{ animation: 'ping 200ms cubic-bezier(0, 0, 0.2, 1) forwards' }}></div>
                     )}
