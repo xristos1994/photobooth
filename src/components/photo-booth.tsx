@@ -56,16 +56,16 @@ export function PhotoBooth() {
                 }
                 setWebcamError(null);
             } catch (error) {
-                console.error("Error accessing webcam:", error);
-                setWebcamError("Could not access webcam. Please check permissions and try again.");
+                console.error("Σφάλμα πρόσβασης στην camera:", error);
+                setWebcamError("Αδυναμία πρόσβασης στην camera. Παρακαλώ ελέγξτε τις άδειες χρήσης και προσπαθήστε ξανά.");
                 toast({
                     variant: "destructive",
-                    title: "Webcam Error",
-                    description: "Could not access webcam. Please allow camera permissions in your browser settings.",
+                    title: "Σφάλμα πρόσβασης στην camera",
+                    description: "Αδυναμία πρόσβασης στην camera. Παρακαλώ επιτρέψτε στον browser την πρόσβαση στην camera.",
                 });
             }
         } else {
-            setWebcamError("Your browser does not support webcam access.");
+            setWebcamError("Ο browser δεν υποστηρίζει την πρόσβαση στην camera.");
         }
     }, [toast]);
 
@@ -77,7 +77,7 @@ export function PhotoBooth() {
                 const qr = await QRCode.toDataURL(HISTORY_URL, { errorCorrectionLevel: 'H' });
                 setHistoryQrCodeUrl(qr);
             } catch (err) {
-                console.error('Failed to generate history QR code', err);
+                console.error('Αδυναμία δημιουργίας QR code για το ιστορικώ των φωτογραφιών', err);
             }
         };
         generateHistoryQr();
@@ -140,6 +140,18 @@ export function PhotoBooth() {
         return null;
     }, []);
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if([" ", "Enter", "VolumeUp"].includes(e.key)) {
+                handleStartCapture()
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        removeEventListener("keydown", handleKeyDown);
+    }, [])
+
     const downloadImage = (href: string, filename: string) => {
         const link = document.createElement('a');
         link.href = href;
@@ -155,7 +167,7 @@ export function PhotoBooth() {
             const mimeType = dataUrl.substring(dataUrl.indexOf(":") + 1, dataUrl.indexOf(";"));
 
             const body = {
-                filename: `PicClick-booth-${new Date().toISOString()}.jpg`,
+                filename: `milena-christos-wedding-photobooth-${new Date().toISOString()}.jpg`,
                 mimeType: mimeType,
                 base64: base64
             };
@@ -173,17 +185,17 @@ export function PhotoBooth() {
                 setFinalImage(dataUrl);
                 setShowModal(true);
             } else {
-                throw new Error(json.message || "Failed to get file URL from Google Drive.");
+                throw new Error(json.message || "Αδυναμία λήψης συνδέσμου για τη φωτογραφία σας.");
             }
         } catch (error) {
             console.error("Upload failed:", error);
             toast({
                 variant: "destructive",
-                title: "Upload Failed",
-                description: `Could not upload image to Google Drive. Downloading to device instead.`,
+                title: "Σφάλμα κατά το ανέβασμα της φωτογραφίας",
+                description: `Το ανέβασμα της φωτογραφίας απέτυχε. Μπορείτε να την κατεβάσετε κατευθείαν στη συσκευή.`,
             });
             // Fallback to direct download if upload fails
-            downloadImage(dataUrl, `PicClick-booth-${new Date().toISOString()}.jpg`);
+            downloadImage(dataUrl, `milena-christos-wedding-photobooth-${new Date().toISOString()}.jpg`);
         }
 
     }, [toast]);
@@ -247,11 +259,11 @@ export function PhotoBooth() {
 
 
         } catch (error) {
-            console.error("Failed to merge images:", error);
+            console.error("Αδυναμία δημιουργίας ενιαίας εικόνας:", error);
             toast({
                 variant: "destructive",
-                title: "Processing Failed",
-                description: "Could not create the final image. Please try again.",
+                title: "Σφάλμα Διαδικασίας",
+                description: "Σφάλμα στη δημιουργία της τελικής εικόνας. Παρακαλώ προσπαθήστε ξανά.",
             });
         } finally {
             setIsProcessing(false);
@@ -268,8 +280,8 @@ export function PhotoBooth() {
         if (!videoRef.current?.srcObject) {
             toast({
                 variant: "destructive",
-                title: "No Camera Found",
-                description: "Please ensure your webcam is enabled and permissions are granted.",
+                title: "Δε βρέθηκε camera",
+                description: "Παρακαλώ ελέγξε ότι η camera είναι ενεργοποιημένη και η πρόσβαση έχει δωθεί.",
             });
             startWebcam();
             return;
@@ -417,16 +429,16 @@ export function PhotoBooth() {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="lg" className="w-full sm:w-auto" disabled={isCapturing}>
                                     <Settings className="mr-2 h-5 w-5" />
-                                    <span>{numPhotos} Photos</span>
+                                    <span>{numPhotos} {numPhotos > 1 ? "Φωτογραφίες" : "Φωτογραφία"}</span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56">
-                                <DropdownMenuLabel>Number of Photos</DropdownMenuLabel>
+                                <DropdownMenuLabel>Πλήθος Φωτογραφιών</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuRadioGroup value={String(numPhotos)} onValueChange={(val) => setNumPhotos(Number(val))}>
                                     {PHOTO_OPTIONS.map(opt => (
                                         <DropdownMenuRadioItem key={opt} value={String(opt)}>
-                                            {opt} Photo{opt > 1 ? 's' : ''}
+                                            {opt} {opt > 1 ? 'Φωτογραφίες' : 'Φωτογραφία'}
                                         </DropdownMenuRadioItem>
                                     ))}
                                 </DropdownMenuRadioGroup>
@@ -443,11 +455,11 @@ export function PhotoBooth() {
                     </div>
                     <Button onClick={handleStartCapture} disabled={isCapturing || isProcessing || !!webcamError} size="lg" className="w-full font-headline text-lg py-7 rounded-xl shadow-md transition-all hover:scale-105 active:scale-100 flex-grow">
                         {isProcessing ? (
-                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
+                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Επεξεργασία...</>
                         ) : isCapturing ? (
                             "Say Cheese!"
                         ) : (
-                            "Start Photo Session"
+                            "Έναρξη"
                         )}
                     </Button>
                 </div>
@@ -474,21 +486,21 @@ export function PhotoBooth() {
             <Dialog open={showModal} onOpenChange={closeModal}>
                 <DialogContent style={{ width: "70vw", maxWidth: '70vw' }}>
                     <DialogHeader>
-                        <DialogTitle className="font-headline text-2xl">Your Photo Is Ready!</DialogTitle>
+                        <DialogTitle className="font-headline text-2xl">Η φωτογραφία σας είναι έτοιμη!</DialogTitle>
                     </DialogHeader>
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-around' }}>
                         <div style={{ maxWidth: '50%' }}>
                             {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ maxHeight: '80vh' }}/>}
                         </div>
                         <div className="space-y-4 text-center flex flex-col items-center justify-center" style={{ maxWidth: '50%' }}>
-                            <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Scan to Download</h3>
+                            <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Σαρώστε για Λήψη</h3>
                             <div className="bg-white p-2 rounded-lg shadow-md inline-block">
                                 {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" style={{ maxHeight: '30vh' }}/> : <Loader2 className="animate-spin" />}
                             </div>
-                            <p className="text-sm text-muted-foreground">Scan this QR code with your phone or another device to download the image.</p>
+                            <p className="text-sm text-muted-foreground">Σαρώστε το QR code με το κινητό σας για να κατεβάσετε την εικόνα.</p>
                             <Button onClick={() => downloadImage(finalImage!, `PicClick-booth-${new Date().toISOString()}.jpg`)} className="w-full mt-4">
                                 <Download className="mr-2 h-4 w-4" />
-                                Download
+                                Λήψη
                             </Button>
                         </div>
                     </div>
@@ -539,7 +551,7 @@ export function PhotoBooth() {
                         <div className="bg-white p-2 rounded-lg shadow-md inline-block">
                             {historyQrCodeUrl ? <img src={historyQrCodeUrl} alt="QR Code for photo history" className="max-w-xs" /> : <Loader2 className="animate-spin h-24 w-24" />}
                         </div>
-                        <p className="text-sm text-muted-foreground">Σαρώστε αυτόν τον κωδικό QR με το κινητό σας για να δείτε ολόκληρη τη συλλογή φωτογραφιών.</p>
+                        <p className="text-sm text-muted-foreground">Σαρώστε το QR code με το κινητό σας για να δείτε ολόκληρη τη συλλογή φωτογραφιών.</p>
                     </div>
                 </DialogContent>
             </Dialog>
