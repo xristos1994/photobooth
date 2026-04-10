@@ -27,7 +27,6 @@ const PREVIEW_BORDER_SIZE = 2; // The size of the white border in pixels for the
 const FOOTER_HEIGHT = 120; // Height for the text footer on the final image
 const HISTORY_URL = "https://drive.google.com/drive/folders/1U1mPoev7lGEJTlB0T2evFdMcNQPDTOrR?usp=sharing";
 
-
 export function PhotoBooth() {
     const [numPhotos, setNumPhotos] = useState(3);
     const [isCapturing, setIsCapturing] = useState(false);
@@ -42,6 +41,7 @@ export function PhotoBooth() {
     const [isFlashing, setIsFlashing] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const canStart = useRef(true)
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -139,18 +139,6 @@ export function PhotoBooth() {
         }
         return null;
     }, []);
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if([" ", "Enter", "VolumeUp"].includes(e.key)) {
-                handleStartCapture()
-            }
-        }
-
-        window.addEventListener("keydown", handleKeyDown);
-
-        removeEventListener("keydown", handleKeyDown);
-    }, [])
 
     const downloadImage = (href: string, filename: string) => {
         const link = document.createElement('a');
@@ -277,6 +265,8 @@ export function PhotoBooth() {
     }
 
     const handleStartCapture = async () => {
+        if (!canStart.current) return;
+        canStart.current = false;
         if (!videoRef.current?.srcObject) {
             toast({
                 variant: "destructive",
@@ -322,6 +312,7 @@ export function PhotoBooth() {
         setFinalImage(null);
         setQrCodeUrl('');
         setCapturedImages([]);
+        canStart.current = true;
     };
 
     const [style, setStyle] = useState({});
@@ -399,6 +390,17 @@ export function PhotoBooth() {
         };
 
         setStyle(style)
+    }, []);
+
+    useEffect(() => {
+        const eventListenerFn = (e) => {
+            if ((e.screenX === 1000 && e.screenY === 1000) || (e.screenX === 363 && e.screenY === 363)) {
+                handleStartCapture();
+            }
+        }
+        window.addEventListener('click', eventListenerFn)
+
+        return () => window.removeEventListener('click', eventListenerFn)
     }, []);
 
     return (
