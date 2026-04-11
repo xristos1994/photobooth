@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Camera, Loader2, Download, QrCode, Settings, Info, History  } from 'lucide-react';
+import { Camera, Loader2, Download, QrCode, Settings, Info, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import QRCode from 'qrcode';
@@ -16,14 +16,13 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { Label } from '@/components/ui/label';
 
+const isFullEdittion = false;
 const PHOTO_OPTIONS = [1, 2, 3];
 const COUNTDOWN_FIRST = 5;
 const COUNTDOWN_SUBSEQUENT = 3;
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtJfAc31SfatpMtQzyq-K2BVOE5-1RywzEsb6fSxaKvy_0_JNOat45IofTJ4HnEQXT/exec";
-const BORDER_SIZE = 10; // The size of the white border in pixels for the final image
-const PREVIEW_BORDER_SIZE = 2; // The size of the white border in pixels for the preview
+const BORDER_SIZE = 15; // The size of the white border in pixels for the final image
 const FOOTER_HEIGHT = 120; // Height for the text footer on the final image
 const HISTORY_URL = "https://drive.google.com/drive/folders/1U1mPoev7lGEJTlB0T2evFdMcNQPDTOrR?usp=sharing";
 
@@ -81,7 +80,7 @@ export function PhotoBooth() {
             }
         };
         generateHistoryQr();
-        
+
         return () => {
             if (videoRef.current && videoRef.current.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
@@ -201,7 +200,7 @@ export function PhotoBooth() {
 
         try {
             // const footerBgSrc = '/photobooth_footer.png';
-            const footerBgSrc = '/photobooth_footer.png';
+            const footerBgSrc = '/test.png';
             const [loadedImages, footerBg] = await Promise.all([
                 Promise.all(images.map(src => new Promise<HTMLImageElement>((resolve, reject) => {
                     const img = new Image();
@@ -242,12 +241,12 @@ export function PhotoBooth() {
 
             // Draw "Μιλένα & Χρίστος"
             context.drawImage(footerBg, 0, y, canvas.width, FOOTER_HEIGHT + BORDER_SIZE);
-            context.font = '40px Poppins';
-            context.fillText('Μιλένα & Χρίστος', canvas.width / 2, footerY - 10);
+            // context.font = '40px Poppins';
+            // context.fillText('Μιλένα & Χρίστος', canvas.width / 2, footerY - 10);
 
             // Draw "06.06.2026"
-            context.font = '30px Poppins';
-            context.fillText('06.06.2026', canvas.width / 2, footerY + 30);
+            // context.font = '30px Poppins';
+            // context.fillText('06.06.2026', canvas.width / 2, footerY + 30);
 
 
             const mergedImage = canvas.toDataURL('image/jpeg', 0.9);
@@ -445,36 +444,40 @@ export function PhotoBooth() {
                         </div>
                     )}
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 items-center w-full">
-                    <div className="flex-shrink-0">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="lg" className="w-full sm:w-auto" disabled={isCapturing}>
-                                    <Settings className="mr-2 h-5 w-5" />
-                                    <span>{numPhotos} {numPhotos > 1 ? "Φωτογραφίες" : "Φωτογραφία"}</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56">
-                                <DropdownMenuLabel>Πλήθος Φωτογραφιών</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup value={String(numPhotos)} onValueChange={(val) => setNumPhotos(Number(val))}>
-                                    {PHOTO_OPTIONS.map(opt => (
-                                        <DropdownMenuRadioItem key={opt} value={String(opt)}>
-                                            {opt} {opt > 1 ? 'Φωτογραφίες' : 'Φωτογραφία'}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button variant="outline" size="lg" className="px-3" onClick={() => setShowInfoModal(true)} disabled={isCapturing || isProcessing}>
-                           <Info className="h-5 w-5" />
-                           <span className="sr-only">Οδηγίες</span>
-                       </Button>
-                       <Button variant="outline" size="lg" className="px-3" onClick={() => setShowHistoryModal(true)} disabled={isCapturing || isProcessing}>
-                           <History className="h-5 w-5" />
-                           <span className="sr-only">Ιστορικό</span>
-                       </Button>
-                    </div>
+                <div className="flex flex-col sm:flex-row gap-4 items-center w-full px-4">
+                    {isFullEdittion &&
+                        <div className="flex-shrink-0">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="lg" className="w-full sm:w-auto" disabled={isCapturing}>
+                                        <Settings className="mr-2 h-5 w-5" />
+                                        <span>{numPhotos} {numPhotos > 1 ? "Φωτογραφίες" : "Φωτογραφία"}</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56">
+                                    <DropdownMenuLabel>Πλήθος Φωτογραφιών</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup value={String(numPhotos)} onValueChange={(val) => setNumPhotos(Number(val))}>
+                                        {PHOTO_OPTIONS.map(opt => (
+                                            <DropdownMenuRadioItem key={opt} value={String(opt)}>
+                                                {opt} {opt > 1 ? 'Φωτογραφίες' : 'Φωτογραφία'}
+                                            </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            <Button variant="outline" size="lg" className="px-3" onClick={() => setShowInfoModal(true)} disabled={isCapturing || isProcessing}>
+                                <Info className="h-5 w-5" />
+                                <span className="sr-only">Οδηγίες</span>
+                            </Button>
+                            <Button variant="outline" size="lg" className="px-3" onClick={() => setShowHistoryModal(true)} disabled={isCapturing || isProcessing}>
+                                <History className="h-5 w-5" />
+                                <span className="sr-only">Ιστορικό</span>
+                            </Button>
+
+
+                        </div>}
                     <Button onClick={handleStartCapture} disabled={isCapturing || isProcessing || !!webcamError} size="lg" className="w-full font-headline text-lg py-7 rounded-xl shadow-md transition-all hover:scale-105 active:scale-100 flex-grow">
                         {isProcessing ? (
                             <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Επεξεργασία...</>
@@ -512,12 +515,12 @@ export function PhotoBooth() {
                     </DialogHeader>
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-around' }}>
                         <div style={{ maxWidth: '50%' }}>
-                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ maxHeight: '80vh' }}/>}
+                            {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ maxHeight: '80vh' }} />}
                         </div>
                         <div className="space-y-4 text-center flex flex-col items-center justify-center" style={{ maxWidth: '50%' }}>
                             <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Σαρώστε για Λήψη</h3>
                             <div className="bg-white p-2 rounded-lg shadow-md inline-block">
-                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" style={{ maxHeight: '30vh' }}/> : <Loader2 className="animate-spin" />}
+                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" style={{ maxHeight: '30vh' }} /> : <Loader2 className="animate-spin" />}
                             </div>
                             <p className="text-sm text-muted-foreground">Σαρώστε το QR code με το κινητό σας για να κατεβάσετε την εικόνα.</p>
                             <Button onClick={() => downloadImage(finalImage!, `PicClick-booth-${new Date().toISOString()}.jpg`)} className="w-full mt-4">
@@ -538,23 +541,23 @@ export function PhotoBooth() {
                         <p>Καλώς ήρθατε στο <strong>PicClick Booth</strong>!</p>
                         <ol className="list-decimal list-inside space-y-3">
                             <li>
-                                <strong>Επιλογή Αριθμού Φωτογραφιών:</strong><br/>
+                                <strong>Επιλογή Αριθμού Φωτογραφιών:</strong><br />
                                 Χρησιμοποιήστε το κουμπί ρυθμίσεων (<Settings className="inline h-4 w-4" />) για να επιλέξετε πόσες φωτογραφίες θα τραβήξετε.
                             </li>
                             <li>
-                                <strong>Έναρξη:</strong><br/>
+                                <strong>Έναρξη:</strong><br />
                                 Πατήστε το κουμπί "Start Photo Session" για να ξεκινήσει η αντίστροφη μέτρηση.
                             </li>
                             <li>
-                                <strong>Ποζάρετε!:</strong><br/>
+                                <strong>Ποζάρετε!:</strong><br />
                                 Ετοιμαστείτε να ποζάρετε! Η κάμερα θα τραβήξει αυτόματα τις φωτογραφίες μετά την αντίστροφη μέτρηση.
                             </li>
                             <li>
-                                <strong>Τελική Εικόνα:</strong><br/>
+                                <strong>Τελική Εικόνα:</strong><br />
                                 Μόλις ολοκληρωθεί η λήψη, οι φωτογραφίες σας θα συνδυαστούν σε μία τελική εικόνα.
                             </li>
                             <li>
-                                <strong>Λήψη Φωτογραφίας:</strong><br/>
+                                <strong>Λήψη Φωτογραφίας:</strong><br />
                                 Στο παράθυρο που θα εμφανιστεί, σαρώστε τον κωδικό QR με το κινητό σας για να κατεβάσετε τη φωτογραφία, ή χρησιμοποιήστε το κουμπί "Download".
                             </li>
                         </ol>
