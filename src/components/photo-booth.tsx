@@ -395,13 +395,19 @@ export function PhotoBooth() {
     useEffect(() => {
         const eventListenerFn = (e) => {
             if ((e.screenX === 1000 && e.screenY === 1000) || (e.screenX === 363 && e.screenY === 363)) {
+                if (showModal || showInfoModal || showHistoryModal) {
+                    closeModal();
+                    setShowHistoryModal(false);
+                    setShowInfoModal(false);
+                    return;
+                }
                 handleStartCapture();
             }
         }
         window.addEventListener('click', eventListenerFn)
 
         return () => window.removeEventListener('click', eventListenerFn)
-    }, []);
+    }, [showModal, showInfoModal, showHistoryModal]);
 
     return (
         <div className="pageContainer" style={style.pageContainer}>
