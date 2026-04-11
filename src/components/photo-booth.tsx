@@ -200,14 +200,22 @@ export function PhotoBooth() {
         };
 
         try {
-            const loadedImages: HTMLImageElement[] = await Promise.all(
-                images.map(src => new Promise((resolve, reject) => {
+            // const footerBgSrc = '/photobooth_footer.png';
+            const footerBgSrc = '/photobooth_footer.png';
+            const [loadedImages, footerBg] = await Promise.all([
+                Promise.all(images.map(src => new Promise<HTMLImageElement>((resolve, reject) => {
                     const img = new Image();
                     img.onload = () => resolve(img);
                     img.onerror = reject;
                     img.src = src;
-                }))
-            );
+                }))),
+                new Promise<HTMLImageElement>((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = footerBgSrc;
+                })
+            ]);
 
             if (loadedImages.length === 0) return;
 
@@ -233,6 +241,7 @@ export function PhotoBooth() {
             context.textAlign = 'center';
 
             // Draw "Μιλένα & Χρίστος"
+            context.drawImage(footerBg, 0, y, canvas.width, FOOTER_HEIGHT + BORDER_SIZE);
             context.font = '40px Poppins';
             context.fillText('Μιλένα & Χρίστος', canvas.width / 2, footerY - 10);
 
@@ -386,6 +395,11 @@ export function PhotoBooth() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                backgroundImage: "url('/heart_no_background.png')",
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: 'contain',
+                backgroundPosition: 'center center',
+                color: '#b6b6c44a'
             }
         };
 
@@ -482,7 +496,7 @@ export function PhotoBooth() {
                             <img src={imageSrc} alt={`Captured photo ${index + 1}`} className="previewPhoto" style={style.previewPhoto} />
                         ) : (
                             <div className="previewPhoto" style={style.previewPhoto}>
-                                <Camera className="w-16 h-16 text-muted-foreground/50" />
+                                <Camera className="w-16 h-16" />
                             </div>
                         )
                     )
