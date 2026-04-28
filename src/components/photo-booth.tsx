@@ -23,7 +23,7 @@ const COUNTDOWN_FIRST = 5;
 const COUNTDOWN_SUBSEQUENT = 3;
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtJfAc31SfatpMtQzyq-K2BVOE5-1RywzEsb6fSxaKvy_0_JNOat45IofTJ4HnEQXT/exec";
 const BORDER_SIZE = 15; // The size of the white border in pixels for the final image
-const FOOTER_HEIGHT = 120; // Height for the text footer on the final image
+const FOOTER_HEIGHT = 350; // Height for the text footer on the final image
 const HISTORY_URL = "https://drive.google.com/drive/folders/1U1mPoev7lGEJTlB0T2evFdMcNQPDTOrR?usp=sharing";
 
 export function PhotoBooth() {
@@ -199,8 +199,7 @@ export function PhotoBooth() {
         };
 
         try {
-            // const footerBgSrc = '/photobooth_footer.png';
-            const footerBgSrc = '/test.png';
+            const footerBgSrc = '/photobooth_footer.png';
             const [loadedImages, footerBg] = await Promise.all([
                 Promise.all(images.map(src => new Promise<HTMLImageElement>((resolve, reject) => {
                     const img = new Image();
