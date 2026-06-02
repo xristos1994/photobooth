@@ -490,6 +490,7 @@ export function PhotoBooth() {
                         )}
                     </Button>
                 </div>
+                v1.0.0
             </div>
 
             {/* Right Column */}
