@@ -76,7 +76,7 @@ export function PhotoBooth() {
                 const qr = await QRCode.toDataURL(HISTORY_URL, { errorCorrectionLevel: 'H' });
                 setHistoryQrCodeUrl(qr);
             } catch (err) {
-                console.error('Αδυναμία δημιουργίας QR code για το ιστορικώ των φωτογραφιών', err);
+                console.error('Αδυναμία δημιουργίας QR code για το ιστορικό των φωτογραφιών', err);
             }
         };
         generateHistoryQr();
@@ -183,6 +183,9 @@ export function PhotoBooth() {
             });
             // Fallback to direct download if upload fails
             downloadImage(dataUrl, `milena-christos-wedding-photobooth-${new Date().toISOString()}.jpg`);
+
+            setFinalImage(dataUrl);
+            setShowModal(true);
         }
 
     }, [toast]);
@@ -517,15 +520,26 @@ export function PhotoBooth() {
                             {finalImage && <img src={finalImage} alt="Final merged" className="rounded-md shadow-lg" style={{ maxHeight: '80vh' }} />}
                         </div>
                         <div className="space-y-4 text-center flex flex-col items-center justify-center" style={{ maxWidth: '50%' }}>
-                            <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Σαρώστε για Λήψη</h3>
-                            <div className="bg-white p-2 rounded-lg shadow-md inline-block">
-                                {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" style={{ maxHeight: '30vh' }} /> : <Loader2 className="animate-spin" />}
-                            </div>
-                            <p className="text-sm text-muted-foreground">Σαρώστε το QR code με το κινητό σας για να κατεβάσετε την εικόνα.</p>
-                            <Button onClick={() => downloadImage(finalImage!, `PicClick-booth-${new Date().toISOString()}.jpg`)} className="w-full mt-4">
-                                <Download className="mr-2 h-4 w-4" />
-                                Λήψη
-                            </Button>
+                            {
+                                qrCodeUrl ? (
+                                    <>
+                                        <h3 className="font-headline text-xl flex items-center justify-center gap-2"><QrCode /> Σαρώστε για Λήψη</h3>
+                                        <div className="bg-white p-2 rounded-lg shadow-md inline-block">
+                                            {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code for download" style={{ maxHeight: '30vh' }} /> : <Loader2 className="animate-spin" />}
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">Σαρώστε το QR code με το κινητό σας για να κατεβάσετε την εικόνα.</p>
+                                        <Button onClick={() => downloadImage(finalImage!, `PicClick-booth-${new Date().toISOString()}.jpg`)} className="w-full mt-4">
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Λήψη
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <div>
+                                        Η Φωτογραφία κατέβηκε στη συσκευή λόγω αδυναμίας ανεβάσματος.
+                                    </div>
+                                )
+                            }
+                            
                         </div>
                     </div>
                 </DialogContent>
