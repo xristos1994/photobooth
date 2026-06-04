@@ -486,7 +486,7 @@ export function PhotoBooth() {
                         ) : isCapturing ? (
                             "Say Cheese!"
                         ) : (
-                            "Έναρξη..."
+                            "Έναρξη"
                         )}
                     </Button>
                 </div>
