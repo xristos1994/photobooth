@@ -116,9 +116,9 @@ export function PhotoBooth() {
                 canvas.width = sourceWidth;
                 canvas.height = sourceHeight;
 
-                context.save();
-                context.translate(canvas.width, 0);
-                context.scale(-1, 1);
+                // context.save();
+                // context.translate(canvas.width, 0);
+                // context.scale(-1, 1);
 
                 // Draw the cropped video frame onto the canvas
                 context.drawImage(
@@ -387,7 +387,7 @@ export function PhotoBooth() {
                 width: `${videoWidth}px`,
                 height: `${videoHeight}px`,
                 objectFit: 'cover',
-                transform: 'scaleX(-1)'
+                // transform: 'scaleX(-1)'
             },
             previewPhoto: {
                 width: `${previewPhotoWidth}px`,
@@ -486,7 +486,7 @@ export function PhotoBooth() {
                         ) : isCapturing ? (
                             "Say Cheese!"
                         ) : (
-                            "Έναρξη"
+                            "Έναρξη..."
                         )}
                     </Button>
                 </div>
